@@ -1,6 +1,3 @@
-//#define TRACE
-//#define RESTRICTCONSTRUCTABLE
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,36 +20,21 @@ using Server.Spells;
 using Server.Targeting;
 using System.Text;
 using System.Xml;
-
 using CPA = Server.CommandPropertyAttribute;
-
-/*
-** XmlSpawner2
-** version 4.00
-** updated 10/7/13
-** Blaze
-**
-** Originally modified by:
-** ArteGordon
-** Modification of the original XmlSpawner written by bobsmart
-*/
 
 namespace Server.Mobiles
 {
 	public class XmlSpawner : Item, ISpawner
 	{
 		private static bool m_XmlPoints;
-		private static bool m_XmlFactions;
 		private static bool m_XmlSockets;
 
 		public static bool PointsEnabled { get { return m_XmlPoints; } }
-		public static bool FactionsEnabled { get { return m_XmlFactions; } }
 		public static bool SocketsEnabled { get { return m_XmlSockets; } }
 
 		public static void Configure()
 		{
 			m_XmlPoints = Config.Get("XmlSpawner2.Points", false);
-			m_XmlFactions = Config.Get("XmlSpawner2.Factions", false);
 			m_XmlSockets = Config.Get("XmlSpawner2.Sockets", false);
 		}
 
@@ -2157,13 +2139,6 @@ namespace Server.Mobiles
 			XmlAttach.AddAttachmentProperties(this, list);
 		}
 
-		public override void OnSingleClick(Mobile from)
-		{
-			LabelTo(from, "XmlSpawner");
-			LabelTo(from, Name + (m_Running == true ? " [On]" : " [Off]"));
-		}
-
-
 		public override void OnDelete()
 		{
 			base.OnDelete();
@@ -3365,12 +3340,6 @@ public static void _TraceEnd(int index)
 					break;
 				case "defHomeRange":
 					defHomeRange = ConvertToInt(value);
-					break;
-				case "JournalNotifyColor":
-					XmlQuestHolder.JournalNotifyColor = ConvertToInt(value);
-					break;
-				case "JournalEchoColor":
-					XmlQuestHolder.JournalEchoColor = ConvertToInt(value);
 					break;
 				case "BlockKeyword":
 					{

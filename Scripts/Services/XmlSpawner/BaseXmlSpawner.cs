@@ -25,7 +25,6 @@ namespace Server.Mobiles
 	public class BaseXmlSpawner
 	{
 		#region Initialization
-
 		private static List<BaseXmlSpawner.ProtectedProperty> ProtectedPropertiesList = new List<BaseXmlSpawner.ProtectedProperty>();
 
 		private class ProtectedProperty
@@ -58,17 +57,12 @@ namespace Server.Mobiles
 
 		public static void Initialize()
 		{
-			// register restricted properties that cannot be set by the spawner
 			ProtectedPropertiesList.Add(new ProtectedProperty(typeof(Mobile), "accesslevel"));
 			ProtectedPropertiesList.Add(new ProtectedProperty(typeof(Item), "stafflevel"));
-			//fill the list
-			//InitializeHash();
 		}
-
 		#endregion
 
 		#region Type support
-
 		[Flags]
 		public enum KeywordFlags
 		{
@@ -619,23 +613,16 @@ namespace Server.Mobiles
 
 			// Item keywords
 			// these can be spawned like type keywords, or added to containers like items
-			AddItemKeyword("ARMOR");
 			AddItemKeyword("WEAPON");
-			AddItemKeyword("JARMOR");
 			AddItemKeyword("LOOT");
-			AddItemKeyword("JWEAPON");
-			AddItemKeyword("SARMOR");
 			AddItemKeyword("SHIELD");
 			AddItemKeyword("JEWELRY");
 			AddItemKeyword("POTION");
 			AddItemKeyword("SCROLL");
-			AddItemKeyword("NECROSCROLL");
 			AddItemKeyword("LOOTPACK");
 			AddItemKeyword("TAKEN");
 			AddItemKeyword("GIVEN");
 			AddItemKeyword("ITEM");
-			AddItemKeyword("MULTIADDON");
-            AddItemKeyword("RANDOMITEM");
 		}
 
 		#endregion
@@ -5930,50 +5917,10 @@ namespace Server.Mobiles
 			// found the item
 			if (testitem != null)
 			{
-				// check to see if it is a quest token item.  If so, then check validity, otherwise just finding it is enough
-				if (testitem is IXmlQuest && ((IXmlQuest)testitem).IsValid)
-				{
-					IXmlQuest token = (IXmlQuest)testitem;
-
-					if (objstr.Length > objoffset)
-					{
-						has_no_such_item = true;
-						// get any objectives and test for them.  If any of the required conditions are true, then block trigger
-						for (int n = objoffset; n < objstr.Length; n++)
-						{
-							int x=0;
-							if(int.TryParse(objstr[n], out x))
-							{
-								switch (x - objoffset + 1)
-								{
-									case 1:
-										if (token.Completed1) has_no_such_item = false;
-										break;
-									case 2:
-										if (token.Completed2) has_no_such_item = false;
-										break;
-									case 3:
-										if (token.Completed3) has_no_such_item = false;
-										break;
-									case 4:
-										if (token.Completed4) has_no_such_item = false;
-										break;
-									case 5:
-										if (token.Completed5) has_no_such_item = false;
-										break;
-								}
-							}
-						}
-					}
-					else
-						has_no_such_item = false;
-				}
-				else
-				{
-					// is the equippedonly flag set?  If so then see if the item is equipped
-					if ((equippedonly && testitem.Parent == m) || !equippedonly)
-						has_no_such_item = false;
-				}
+				// is the equippedonly flag set?  If so then see if the item is equipped
+				if ((equippedonly && testitem.Parent == m) || !equippedonly)
+					has_no_such_item = false;
+					
 			}
 			return has_no_such_item;
 		}
@@ -6090,54 +6037,10 @@ namespace Server.Mobiles
 			// found the item
 			if (testitem != null)
 			{
-				// check to see if it is a quest token item.  If so, then check validity, otherwise just finding it is enough
-				if (testitem is IXmlQuest)
-				{
-					IXmlQuest token = (IXmlQuest)testitem;
+				// is the equippedonly flag set?  If so then see if the item is equipped
+				if ((equippedonly && testitem.Parent == m) || !equippedonly)
+					has_valid_item = true;
 
-					if (token.IsValid)
-					{
-						if (objstr.Length > objoffset)
-						{
-							has_valid_item = true;
-							// get any objectives and test for them.  If any of the required conditions are false, then dont trigger
-							for (int n = objoffset; n < objstr.Length; n++)
-							{
-								int x=0;
-								if(int.TryParse(objstr[n], out x))
-								{
-									switch (x - objoffset + 1)
-									{
-										case 1:
-											if (!token.Completed1) has_valid_item = false;
-											break;
-										case 2:
-											if (!token.Completed2) has_valid_item = false;
-											break;
-										case 3:
-											if (!token.Completed3) has_valid_item = false;
-											break;
-										case 4:
-											if (!token.Completed4) has_valid_item = false;
-											break;
-										case 5:
-											if (!token.Completed5) has_valid_item = false;
-											break;
-									}
-								}
-							}
-						}
-						else
-							// if an objective list has not been specified then just a valid item is enough
-							has_valid_item = true;
-					}
-				}
-				else
-				{
-					// is the equippedonly flag set?  If so then see if the item is equipped
-					if ((equippedonly && testitem.Parent == m) || !equippedonly)
-						has_valid_item = true;
-				}
 			}
 			return has_valid_item;
 		}
@@ -6749,51 +6652,6 @@ namespace Server.Mobiles
 
 						switch (kw)
 						{
-							// deal with the special keywords
-
-							case itemKeyword.ARMOR:
-								{
-									// syntax is ARMOR,min,max
-									//get the min,max
-									if (itemkeywordargs.Length == 3)
-									{
-										int min = 0;
-										int max = 0;
-										bool converterror = false;
-										try { min = int.Parse(itemkeywordargs[1]); }
-										catch { status_str = "Invalid ARMOR args : " + itemtypestr; converterror = true; }
-
-										try { max = int.Parse(itemkeywordargs[2]); }
-										catch { status_str = "Invalid ARMOR args : " + itemtypestr; converterror = true; }
-
-										if (converterror) return false;
-										Item item = MagicArmor(min, max, false, false);
-
-										if (item != null)
-										{
-											if (equip && m != null)
-											{
-												if (!m.EquipItem(item)) pack.DropItem(item);
-											}
-											else
-											{
-
-												pack.DropItem(item);
-											}
-											// could call applyobjectstringproperties on a nested propertylist here to set item attributes
-											if (itemargstring != null)
-											{
-												ApplyObjectStringProperties(spawner, itemargstring, item, trigmob, refobject, out status_str);
-											}
-										}
-									}
-									else
-									{
-										status_str = "ARMOR takes 2 args : " + itemtypestr;
-										return false;
-									}
-									break;
-								}
 							case itemKeyword.WEAPON:
 								{
 									// syntax is WEAPON,min,max
@@ -6907,123 +6765,6 @@ namespace Server.Mobiles
 									else
 									{
 										status_str = "SHIELD takes 2 args : " + itemtypestr;
-										return false;
-									}
-									break;
-								}
-							case itemKeyword.JARMOR:
-								{
-									// syntax is JARMOR,min,max
-									//get the min,max
-									if (itemkeywordargs.Length == 3)
-									{
-										int min = 0;
-										int max = 0;
-										bool converterror = false;
-										try { min = int.Parse(itemkeywordargs[1]); }
-										catch { status_str = "Invalid JARMOR args : " + itemtypestr; converterror = true; }
-
-										try { max = int.Parse(itemkeywordargs[2]); }
-										catch { status_str = "Invalid JARMOR args : " + itemtypestr; converterror = true; }
-
-										if (converterror) return false;
-										Item item = MagicArmor(min, max, true, true);
-										if (item != null)
-										{
-											if (equip && m != null)
-											{
-												if (!m.EquipItem(item)) pack.DropItem(item);
-											}
-											else
-												pack.DropItem(item);
-											// could call applyobjectstringproperties on a nested propertylist here to set item attributes
-											if (itemargstring != null)
-											{
-												ApplyObjectStringProperties(spawner, itemargstring, item, trigmob, refobject, out status_str);
-											}
-										}
-									}
-									else
-									{
-										status_str = "JARMOR takes 2 args : " + itemtypestr;
-										return false;
-									}
-									break;
-								}
-							case itemKeyword.SARMOR:
-								{
-									// syntax is SARMOR,min,max
-									//get the min,max
-									if (itemkeywordargs.Length == 3)
-									{
-										int min = 0;
-										int max = 0;
-										bool converterror = false;
-										try { min = int.Parse(itemkeywordargs[1]); }
-										catch { status_str = "Invalid SARMOR args : " + itemtypestr; converterror = true; }
-
-										try { max = int.Parse(itemkeywordargs[2]); }
-										catch { status_str = "Invalid SARMOR args : " + itemtypestr; converterror = true; }
-
-										if (converterror) return false;
-										Item item = MagicArmor(min, max, false, true);
-										if (item != null)
-										{
-											if (equip && m != null)
-											{
-												if (!m.EquipItem(item)) pack.DropItem(item);
-											}
-											else
-												pack.DropItem(item);
-											// could call applyobjectstringproperties on a nested propertylist here to set item attributes
-											if (itemargstring != null)
-											{
-												ApplyObjectStringProperties(spawner, itemargstring, item, trigmob, refobject, out status_str);
-											}
-										}
-									}
-									else
-									{
-										status_str = "SARMOR takes 2 args : " + itemtypestr;
-										return false;
-									}
-									break;
-								}
-							case itemKeyword.JWEAPON:
-								{
-									// syntax is JWEAPON,min,max
-									//get the min,max
-									if (itemkeywordargs.Length == 3)
-									{
-										int min = 0;
-										int max = 0;
-										bool converterror = false;
-										try { min = int.Parse(itemkeywordargs[1]); }
-										catch { status_str = "Invalid JWEAPON args : " + itemtypestr; converterror = true; }
-
-										try { max = int.Parse(itemkeywordargs[2]); }
-										catch { status_str = "Invalid JWEAPON args : " + itemtypestr; converterror = true; }
-
-										if (converterror) return false;
-										Item item = MagicWeapon(min, max, true);
-										if (item != null)
-										{
-											if (equip && m != null)
-											{
-												if (!m.EquipItem(item)) pack.DropItem(item);
-											}
-											else
-												pack.DropItem(item);
-											// could call applyobjectstringproperties on a nested propertylist here to set item attributes
-											if (itemargstring != null)
-											{
-												ApplyObjectStringProperties(spawner, itemargstring, item, trigmob, refobject, out status_str);
-											}
-										}
-									}
-									else
-									{
-										status_str = "JWEAPON takes 2 args : " + itemtypestr;
 										return false;
 									}
 									break;
@@ -7208,36 +6949,6 @@ namespace Server.Mobiles
 									else
 									{
 										status_str = "LOOT takes 1 arg : " + itemtypestr;
-										return false;
-									}
-									break;
-								}
-							case itemKeyword.NECROSCROLL:
-								{
-									// syntax is NECROSCROLL,index
-									if (itemkeywordargs.Length == 2)
-									{
-										int index = 0;
-										if(!int.TryParse(itemkeywordargs[1], out index))
-										{
-											status_str = "Invalid NECROSCROLL args : " + itemtypestr;
-											return false;
-										}
-
-                                        Item item = Loot.Construct(Loot.NecromancyScrollTypes, index);
-                                        if (item != null)
-                                        {
-                                            pack.DropItem(item);
-                                            // could call applyobjectstringproperties on a nested propertylist here to set item attributes
-                                            if (itemargstring != null)
-                                            {
-                                                ApplyObjectStringProperties(spawner, itemargstring, item, trigmob, refobject, out status_str);
-                                            }
-                                        }
-                                    }
-									else
-									{
-										status_str = "NECROSCROLL takes 1 arg : " + itemtypestr;
 										return false;
 									}
 									break;
@@ -7836,35 +7547,6 @@ namespace Server.Mobiles
             BaseCreature.GetRandomAOSStats(minLevel, maxLevel, out attributeCount, out min, out max);
 
             if (item is BaseJewel)
-                BaseRunicTool.ApplyAttributesTo((BaseJewel)item, attributeCount, min, max);
-
-            return item;
-        }
-
-        public static Item MagicArmor(int minLevel, int maxLevel, bool jewel, bool shield)
-        {
-            BaseCreature.Cap(ref minLevel, 0, 5);
-            BaseCreature.Cap(ref maxLevel, 0, 5);
-
-            Item item = null;
-            if (jewel)
-                item = Loot.RandomArmorOrShieldOrJewelry();
-            else
-                if (shield)
-                item = Loot.RandomArmorOrShield();
-            else
-                item = Loot.RandomArmor();
-
-            if (item == null)
-                return null;
-
-            int attributeCount, min, max;
-
-            BaseCreature.GetRandomAOSStats(minLevel, maxLevel, out attributeCount, out min, out max);
-
-            if (item is BaseArmor)
-                BaseRunicTool.ApplyAttributesTo((BaseArmor)item, attributeCount, min, max);
-            else if (item is BaseJewel)
                 BaseRunicTool.ApplyAttributesTo((BaseJewel)item, attributeCount, min, max);
 
             return item;
@@ -9370,8 +9052,7 @@ namespace Server.Mobiles
 									}
 									else//non stackable, we have to find them all
 									{
-										// dont save quest holders
-										if (itemTarget is XmlQuestBook || itemTarget is IXmlQuest || quantity<=1)
+										if (quantity<=1)
 										{
 											toRemove.Add(itemTarget);
 										}
@@ -9530,13 +9211,7 @@ namespace Server.Mobiles
 									}
 									else
 									{
-										// dont save quest holders
-										if (itemTarget is XmlQuestBook || itemTarget is IXmlQuest)
-										{
-											itemTarget.Delete();
-										}
-										else
-											savedItem = itemTarget;
+										savedItem = itemTarget;
 									}
 
 									// if the saved item was being held then release it otherwise the player can take it back
@@ -9675,13 +9350,7 @@ namespace Server.Mobiles
 									}
 									else
 									{
-										// dont save quest holders
-										if (itemTarget is XmlQuestBook || itemTarget is XmlQuestHolder || itemTarget is XmlQuestToken)
-										{
-											itemTarget.Delete();
-										}
-										else
-											savedItem = itemTarget;
+										savedItem = itemTarget;
 									}
 								}
 
@@ -10810,32 +10479,6 @@ namespace Server.Mobiles
 					// deal with the special keywords
 					switch (kw)
 					{
-						case itemKeyword.ARMOR:
-							{
-								// syntax is ARMOR,min,max
-								//get the min,max
-								if (itemkeywordargs.Length == 3)
-								{
-									int min = 0;
-									int max = 0;
-									if(!int.TryParse(itemkeywordargs[1], out min) || !int.TryParse(itemkeywordargs[2], out max))
-									{
-										status_str = "Invalid ARMOR args : " + itemtypestr;
-										return false;
-									}
-									Item item = MagicArmor(min, max, false, false);
-									if (item != null)
-									{
-										AddSpawnItem(spawner, TheSpawn, item, location, map, triggermob, requiresurface, spawnpositioning, substitutedtypeName, out status_str);
-									}
-								}
-								else
-								{
-									status_str = "ARMOR takes 2 args : " + itemtypestr;
-									return false;
-								}
-								break;
-							}
 						case itemKeyword.WEAPON:
 							{
 								// syntax is WEAPON,min,max
@@ -10858,84 +10501,6 @@ namespace Server.Mobiles
 								else
 								{
 									status_str = "WEAPON takes 2 args : " + itemtypestr;
-									return false;
-								}
-								break;
-							}
-						case itemKeyword.JARMOR:
-							{
-								// syntax is JARMOR,min,max
-								//get the min,max
-								if (itemkeywordargs.Length == 3)
-								{
-									int min = 0;
-									int max = 0;
-									if(!int.TryParse(itemkeywordargs[1], out min) || !int.TryParse(itemkeywordargs[2], out max))
-									{
-										status_str = "Invalid JARMOR args : " + itemtypestr;
-										return false;
-									}
-									Item item = MagicArmor(min, max, true, true);
-									if (item != null)
-									{
-										AddSpawnItem(spawner, TheSpawn, item, location, map, triggermob, requiresurface, spawnpositioning, substitutedtypeName, out status_str);
-									}
-								}
-								else
-								{
-									status_str = "JARMOR takes 2 args : " + itemtypestr;
-									return false;
-								}
-								break;
-							}
-						case itemKeyword.JWEAPON:
-							{
-								// syntax is JWEAPON,min,max
-								//get the min,max
-								if (itemkeywordargs.Length == 3)
-								{
-									int min = 0;
-									int max = 0;
-									if(!int.TryParse(itemkeywordargs[1], out min) || !int.TryParse(itemkeywordargs[2], out max))
-									{
-										status_str = "Invalid JWEAPON args : " + itemtypestr;
-										return false;
-									}
-									Item item = MagicWeapon(min, max, true);
-									if (item != null)
-									{
-										AddSpawnItem(spawner, TheSpawn, item, location, map, triggermob, requiresurface, spawnpositioning, substitutedtypeName, out status_str);
-									}
-								}
-								else
-								{
-									status_str = "JWEAPON takes 2 args : " + itemtypestr;
-									return false;
-								}
-								break;
-							}
-						case itemKeyword.SARMOR:
-							{
-								// syntax is SARMOR,min,max
-								//get the min,max
-								if (itemkeywordargs.Length == 3)
-								{
-									int min = 0;
-									int max = 0;
-									if(!int.TryParse(itemkeywordargs[1], out min) || !int.TryParse(itemkeywordargs[2], out max))
-									{
-										status_str = "Invalid SARMOR args : " + itemtypestr;
-										return false;
-									}
-									Item item = MagicArmor(min, max, false, true);
-									if (item != null)
-									{
-										AddSpawnItem(spawner, TheSpawn, item, location, map, triggermob, requiresurface, spawnpositioning, substitutedtypeName, out status_str);
-									}
-								}
-								else
-								{
-									status_str = "SARMOR takes 2 args : " + itemtypestr;
 									return false;
 								}
 								break;
@@ -11141,144 +10706,6 @@ namespace Server.Mobiles
 								}
 								break;
 							}
-
-						case itemKeyword.NECROSCROLL:
-							{
-								// syntax is NECROSCROLL,index
-								if (itemkeywordargs.Length == 2)
-								{
-									int necroindex = 0;
-									if(!int.TryParse(itemkeywordargs[1], out necroindex))
-									{
-										status_str = "Invalid NECROSCROLL args : " + itemtypestr;
-										return false;
-									}
-									Item item = Loot.Construct(Loot.NecromancyScrollTypes, necroindex);
-									if (item != null)
-									{
-										AddSpawnItem(spawner, TheSpawn, item, location, map, triggermob, requiresurface, spawnpositioning, substitutedtypeName, out status_str);
-									}
-								}
-								else
-								{
-									status_str = "NECROSCROLL takes 1 arg : " + itemtypestr;
-									return false;
-								}
-								break;
-
-							}
-						case itemKeyword.MULTIADDON:
-							{
-								// syntax is MULTIADDON,filename
-								if (itemkeywordargs.Length == 2)
-								{
-									string filename = itemkeywordargs[1];
-
-									// read in the multi.txt file
-
-									Item item = XmlSpawnerAddon.ReadMultiFile(filename, out status_str);
-
-									if (item != null)
-									{
-										AddSpawnItem(spawner, TheSpawn, item, location, map, triggermob, requiresurface, spawnpositioning, substitutedtypeName, out status_str);
-									}
-								}
-								else
-								{
-									status_str = "MULTIADDON takes 1 arg : " + itemtypestr;
-									return false;
-								}
-								break;
-							}
-                        case itemKeyword.RANDOMITEM:
-                            {
-                                // syntax is RANDOMITEM,[basebudget,][prefix,][suffix,][rawluck,][artifact]
-                                int basebudget = 0;
-                                ReforgedPrefix prefix = ReforgedPrefix.None;
-                                ReforgedSuffix suffix = ReforgedSuffix.None;
-                                int killersluck = 0;
-                                bool converterror = false;
-
-                                if (itemkeywordargs.Length > 1)
-                                {
-                                    try { basebudget = int.Parse(itemkeywordargs[1]); }
-                                    catch { status_str = "Invalid RANDOMITEM args : " + itemtypestr; converterror = true; }
-                                }
-                                else
-                                    basebudget = Utility.RandomMinMax(100, 700);
-
-                                if (converterror) return false;
-
-                                if (itemkeywordargs.Length > 2)
-                                {
-                                    try
-                                    {
-                                        prefix = (ReforgedPrefix)Enum.Parse(typeof(ReforgedPrefix), itemkeywordargs[2], true);
-                                    }
-                                    catch { status_str = "Invalid RANDOMITEM args : " + itemtypestr; converterror = true; }
-                                }
-
-                                if (converterror) return false;
-
-                                if (itemkeywordargs.Length > 3)
-                                {
-                                    try
-                                    {
-                                        suffix = (ReforgedSuffix)Enum.Parse(typeof(ReforgedSuffix), itemkeywordargs[3], true);
-                                    }
-                                    catch { status_str = "Invalid RANDOMITEM args : " + itemtypestr; converterror = true; }
-                                }
-
-                                if (converterror) return false;
-
-                                int rawluck = triggermob != null ? triggermob is PlayerMobile ? ((PlayerMobile)triggermob).RealLuck : triggermob.Luck : 0;
-                                bool artifact = false;
-
-                                if (rawluck == 0 && itemkeywordargs.Length > 4)
-                                {
-                                    try { rawluck = int.Parse(itemkeywordargs[4]); }
-                                    catch { status_str = "Invalid RANDOMITEM args : " + itemtypestr; converterror = true; }
-                                }
-
-                                if (rawluck > 0)
-                                {
-                                    killersluck = LootPack.GetLuckChance(rawluck);
-                                }
-
-                                if (itemkeywordargs.Length > 5)
-                                {
-                                    string arty = itemkeywordargs[5];
-
-                                    if (arty != null && arty.ToLower() == "true")
-                                    {
-                                        artifact = true;
-                                    }
-                                }
-
-                                if (basebudget < 100) basebudget = 100;
-
-                                Item root = spawner;
-                                if (spawner != null && spawner.RootParent is Item)
-                                    root = spawner.RootParent as Item;
-
-                                Item item = Loot.RandomArmorOrShieldOrWeaponOrJewelry(LootPackEntry.IsInTokuno(root), LootPackEntry.IsMondain(root), LootPackEntry.IsStygian(root));
-
-                                if (item != null)
-                                {
-                                    if (artifact)
-                                    {
-                                        RunicReforging.GenerateRandomArtifactItem(item, rawluck, basebudget, prefix, suffix);
-                                    }
-                                    else
-                                    {
-                                        RunicReforging.GenerateRandomItem(item, triggermob, basebudget, killersluck, prefix, suffix);
-                                    }
-
-                                    AddSpawnItem(spawner, TheSpawn, item, location, map, triggermob, requiresurface, spawnpositioning, substitutedtypeName, out status_str);
-                                }
-
-                                break;
-                            }
                         default:
                             {
                                 status_str = "unrecognized keyword";
