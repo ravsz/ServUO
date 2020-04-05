@@ -704,11 +704,6 @@ namespace Server.Items
                 }
                 #endregion
             }
-            
-            if (parent is Mobile)
-            {
-                ((Mobile)parent).AddToBackpack(this);
-            }
         }
 
         public override void OnRemoved(object parent)
@@ -956,8 +951,6 @@ namespace Server.Items
                 list.Add(1075210, prop.ToString()); // Increased Karma Loss ~1val~%
 
             base.AddResistanceProperties(list);
-
-            Server.Engines.XmlSpawner2.XmlAttach.AddAttachmentProperties(this, list);
 
             if (m_HitPoints >= 0 && m_MaxHitPoints > 0)
                 list.Add(1060639, "{0}\t{1}", m_HitPoints, m_MaxHitPoints); // durability ~1_val~ / ~2_val~
