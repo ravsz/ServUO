@@ -69,7 +69,7 @@ namespace Server.Spells.First
                 * 15 + (Inscription/20) Physcial bonus
                 * -5 Elemental
                 * The reactive armor spell has an indefinite duration, becoming active when cast, and deactivated when re-cast. 
-                * Reactive Armor, Protection, and Magic Reflection will stay onï¿½even after logging out, even after dyingï¿½until you ï¿½turn them offï¿½ by casting them again. 
+                * Reactive Armor, Protection, and Magic Reflection will stay on—even after logging out, even after dying—until you “turn them off” by casting them again. 
                 * (+20 physical -5 elemental at 100 Inscription)
                 */
                 if (this.CheckSequence())
@@ -132,25 +132,15 @@ namespace Server.Spells.First
                 {
                     if (this.Caster.BeginAction(typeof(DefensiveSpell)))
                     {
-                        if (Core.UOR)
-                        {
-                            int value = (int)(this.Caster.Skills[SkillName.Magery].Value + 10);
-                            value /= 4;
+                        int value = (int)(this.Caster.Skills[SkillName.Magery].Value + this.Caster.Skills[SkillName.Meditation].Value + this.Caster.Skills[SkillName.Inscribe].Value);
+                        value /= 3;
 
-                            this.Caster.MeleeDamageAbsorb = value;
-                        }
-                        else
-                        {
-                            int value = (int)(this.Caster.Skills[SkillName.Magery].Value + this.Caster.Skills[SkillName.Meditation].Value + this.Caster.Skills[SkillName.Inscribe].Value);
-                            value /= 3;
+                        if (value < 0)
+                            value = 1;
+                        else if (value > 75)
+                            value = 75;
 
-                            if (value < 0)
-                                value = 1;
-                            else if (value > 75)
-                                value = 75;
-
-                            this.Caster.MeleeDamageAbsorb = value;
-                        }
+                        this.Caster.MeleeDamageAbsorb = value;
 
                         this.Caster.FixedParticles(0x376A, 9, 32, 5008, EffectLayer.Waist);
                         this.Caster.PlaySound(0x1F2);

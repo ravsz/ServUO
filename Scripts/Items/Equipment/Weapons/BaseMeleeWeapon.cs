@@ -24,26 +24,6 @@ namespace Server.Items
 			
             int absorb = defender.MeleeDamageAbsorb;
 
-            if (Core.UOR)
-            {
-                if (absorb > 0)
-                {
-                    int react = damage * absorb/100;
-
-                    damage -= react;
-                    attacker.Damage(react, defender);
-
-                    attacker.PlaySound(0x1F1);
-                    attacker.FixedEffect(0x374A, 10, 16);
-
-                    defender.MeleeDamageAbsorb = 0;
-                    defender.SendLocalizedMessage(1005556); // Your reactive armor spell has been nullified.
-                    DefensiveSpell.Nullify(defender);
-                }
-
-                return damage;
-            }
-
             if (absorb > 0)
             {
                 if (absorb > damage)
