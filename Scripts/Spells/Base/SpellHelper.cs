@@ -1320,6 +1320,31 @@ namespace Server.Spells
             if (target == null || caster == null)
                 return false;
 
+            if (Core.UOR)
+            {
+                reflect = (target.MagicDamageAbsorb > 0);
+                
+                if (reflect)
+                {
+                    if (target is BaseCreature)
+                        ((BaseCreature)target).CheckReflect(caster, ref reflect);
+
+                    target.MagicDamageAbsorb = 0;
+                    DefensiveSpell.Nullify(target);
+
+                    if (reflect)
+                    {
+                        target.FixedEffect(0x37B9, 10, 5);
+
+                        source = target;
+                        defender = caster;
+                    }
+
+                    return true;
+                }
+                return false;
+            }
+
             if (target.MagicDamageAbsorb > 0)
             {
                 ++circle;
