@@ -414,6 +414,14 @@ namespace Server.Mobiles
             }
         }
 
+		public override double ArmorRating
+		{
+			get
+			{
+				return VirtualArmor;
+			}
+		}
+
         public virtual int DefaultManaRegen
         {
             get
