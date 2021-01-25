@@ -2060,41 +2060,8 @@ namespace Server.Items
 				damage = armor.OnHit(this, damage);
 			}
 
-			var virtualArmor = defender.ArmorRating;
-
 			damage -= XmlAttach.OnArmorHit(attacker, defender, armorItem, this, damage);
 			damage -= XmlAttach.OnArmorHit(attacker, defender, shield, this, damage);
-
-			if (virtualArmor > 0)
-			{
-				double scalar;
-
-				if (chance < 0.14)
-				{
-					scalar = 0.07;
-				}
-				else if (chance < 0.28)
-				{
-					scalar = 0.14;
-				}
-				else if (chance < 0.43)
-				{
-					scalar = 0.15;
-				}
-				else if (chance < 0.65)
-				{
-					scalar = 0.22;
-				}
-				else
-				{
-					scalar = 0.35;
-				}
-
-				int from = (int)(virtualArmor * scalar) / 2;
-				int to = (int)(virtualArmor * scalar);
-
-				damage -= Utility.Random(from, (to - from) + 1);
-			}
 
 			return damage;
 		}

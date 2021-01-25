@@ -24,7 +24,7 @@ namespace Server.Items
 			
             int absorb = defender.MeleeDamageAbsorb;
 
-            if (absorb > 0)
+            if (absorb > 0 && damage > 0)
             {
                 if (absorb > damage)
                 {
