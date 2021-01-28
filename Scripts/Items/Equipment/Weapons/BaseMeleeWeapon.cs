@@ -17,8 +17,6 @@ namespace Server.Items
 
         public override int AbsorbDamage(Mobile attacker, Mobile defender, int damage)
         {
-            damage = base.AbsorbDamage(attacker, defender, damage);
-
             if (Core.AOS)
                 return damage;
 			
@@ -47,6 +45,10 @@ namespace Server.Items
                     defender.SendLocalizedMessage(1005556); // Your reactive armor spell has been nullified.
                     DefensiveSpell.Nullify(defender);
                 }
+            }
+            else
+            {
+                damage = base.AbsorbDamage(attacker, defender, damage);
             }
 
             return damage;
