@@ -620,11 +620,6 @@ namespace Server.Items
 
         public static double GetInherentStaminaLossReduction(Mobile from)
         {
-            if (!Core.SA)
-            {
-                return 0.0;
-            }
-
             double toReduce = 0.0;
             int count = 0;
 
