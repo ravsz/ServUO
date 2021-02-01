@@ -134,6 +134,27 @@ namespace Server.Items
                 return 5;
             }
         }
+        public override int OldMinDamage
+        {
+            get
+            {
+                return 6;
+            }
+        }
+        public override int OldMaxDamage
+        {
+            get
+            {
+                return 18;
+            }
+        }
+        public override int OldSpeed
+        {
+            get
+            {
+                return 30;
+            }
+        }
         public override int InitMinHits
         {
             get
